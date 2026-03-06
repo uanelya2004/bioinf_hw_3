@@ -1,0 +1,40 @@
+from Bio import SeqIO
+import matplotlib.pyplot as plt
+
+human = str(SeqIO.read("seq_human.fasta", "fasta").seq)
+neander = str(SeqIO.read("seq_neander.fasta", "fasta").seq)
+
+print(f"Человек: {len(human)} bp")
+print(f"Неандерталец: {len(neander)} bp")
+
+window = 30
+step = 5
+threshold = 0.8
+
+dots_x = []
+dots_y = []
+
+for i in range(0, len(human) - window, step):
+    for j in range(0, len(neander) - window, step):
+
+        matches = 0
+        for k in range(window):
+            if human[i+k] == neander[j+k]:
+                matches += 1
+
+        if matches / window >= threshold:
+            dots_x.append(i + window//2)
+            dots_y.append(j + window//2)
+
+print("Найдено точек:", len(dots_x))
+
+plt.figure(figsize=(8,8))
+plt.scatter(dots_x, dots_y, s=0.5, color="red")
+
+plt.xlabel("Человек")
+plt.ylabel("Неандерталец")
+plt.title("Mитохондрия неандертальца vs человека")
+
+plt.grid(alpha=0.3)
+plt.tight_layout()
+plt.show()
