@@ -1,0 +1,78 @@
+Индекс БД:
+  ACGA: [15]
+  AGGA: [2]
+  AGGC: [9]
+  ATAC: [13]
+  ATCC: [5]
+  CAGG: [8]
+  CATA: [12]
+  CCAG: [7]
+  CTAG: [0]
+  GATC: [4]
+  GCAT: [11]
+  GGAT: [3]
+  GGCA: [10]
+  TACG: [14]
+  TAGG: [1]
+  TCCA: [6]
+
+Найденные seed'ы (query_pos, ref_pos, kmer):
+  query[0:4] = ref[3:7] = GGAT
+  query[1:5] = ref[4:8] = GATC
+  query[2:6] = ref[5:9] = ATCC
+  query[3:7] = ref[6:10] = TCCA
+
+Seed: GGAT  query[0:4]  ref[3:7]  seed_score=12
+  Расширение влево:
+    некуда расширяться
+  Расширение вправо:
+    query[4]=C vs ref[7]=C  Scur=15
+    query[5]=C vs ref[8]=C  Scur=18
+    query[6]=A vs ref[9]=A  Scur=21
+    query[7]=T vs ref[10]=G  Scur=18
+  Smax = 21
+  Итоговый регион: query[0:7]  ref[3:10]
+    query: GGATCCA
+    ref:   GGATCCA
+
+Seed: GATC  query[1:5]  ref[4:8]  seed_score=12
+  Расширение влево:
+    query[0]=G vs ref[3]=G  Scur=15
+  Расширение вправо:
+    query[5]=C vs ref[8]=C  Scur=18
+    query[6]=A vs ref[9]=A  Scur=21
+    query[7]=T vs ref[10]=G  Scur=18
+  Smax = 21
+  Итоговый регион: query[0:7]  ref[3:10]
+    query: GGATCCA
+    ref:   GGATCCA
+
+Seed: ATCC  query[2:6]  ref[5:9]  seed_score=12
+  Расширение влево:
+    query[1]=G vs ref[4]=G  Scur=15
+    query[0]=G vs ref[3]=G  Scur=18
+  Расширение вправо:
+    query[6]=A vs ref[9]=A  Scur=21
+    query[7]=T vs ref[10]=G  Scur=18
+  Smax = 21
+  Итоговый регион: query[0:7]  ref[3:10]
+    query: GGATCCA
+    ref:   GGATCCA
+
+Seed: TCCA  query[3:7]  ref[6:10]  seed_score=12
+  Расширение влево:
+    query[2]=A vs ref[5]=A  Scur=15
+    query[1]=G vs ref[4]=G  Scur=18
+    query[0]=G vs ref[3]=G  Scur=21
+  Расширение вправо:
+    query[7]=T vs ref[10]=G  Scur=18
+  Smax = 21
+  Итоговый регион: query[0:7]  ref[3:10]
+    query: GGATCCA
+    ref:   GGATCCA
+Лучший результат:
+  Лучший k-мер: GGAT
+  Smax = 21
+  Query: GGATCCA
+         |||||||
+  Ref:   GGATCCA

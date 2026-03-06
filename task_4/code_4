@@ -1,0 +1,134 @@
+match = 3
+mismatch = -3
+gap = -2
+k = 4
+X = 2
+
+ref   = "CTAGGATCCAGGCATACGA"
+query = "GGATCCATTCATTA"
+
+
+def s(a, b):
+    return match if a == b else mismatch
+
+# индекс референса
+index = {}
+for i in range(len(ref) - k + 1):
+    kmer = ref[i:i+k]
+    index.setdefault(kmer, []).append(i)
+
+print("Индекс БД:")
+for kmer, positions in sorted(index.items()):
+    print(f"  {kmer}: {positions}")
+
+
+# поиск seed'ов
+seeds = []
+for i in range(len(query) - k + 1):
+    kmer = query[i:i+k]
+    if kmer in index:
+        for j in index[kmer]:
+            seeds.append((i, j, kmer))
+
+print("\nНайденные seed'ы (query_pos, ref_pos, kmer):")
+for seed in seeds:
+    print(f"  query[{seed[0]}:{seed[0]+k}] = ref[{seed[1]}:{seed[1]+k}] = {seed[2]}")
+
+
+# расширение
+def extend(q_start, r_start, q_end, r_end):
+    """
+    Расширяем влево от q_start/r_start и вправо от q_end/r_end.
+    Возвращаем (smax, best_q_start, best_r_start, best_q_end, best_r_end,
+                left_scores, right_scores)
+    """
+    seed_score = k * match  # seed совпал идеально
+
+    # расширение влево
+    left_scores = []
+    scur = seed_score
+    smax = seed_score
+    best_left_q = q_start
+    best_left_r = r_start
+
+    qi, ri = q_start - 1, r_start - 1
+    while qi >= 0 and ri >= 0:
+        scur += s(query[qi], ref[ri])
+        left_scores.append((qi, ri, scur))
+        if scur > smax:
+            smax = scur
+            best_left_q = qi
+            best_left_r = ri
+        if smax - scur >= X:
+            break
+        qi -= 1
+        ri -= 1
+
+    # расширение вправо
+    right_scores = []
+    scur = smax  # продолжаем от лучшего значения после левого расширения
+    best_right_q = q_end
+    best_right_r = r_end
+
+    qi, ri = q_end, r_end
+    while qi < len(query) and ri < len(ref):
+        scur += s(query[qi], ref[ri])
+        right_scores.append((qi, ri, scur))
+        if scur > smax:
+            smax = scur
+            best_right_q = qi + 1
+            best_right_r = ri + 1
+        if smax - scur >= X:
+            break
+        qi += 1
+        ri += 1
+
+    return smax, best_left_q, best_left_r, best_right_q, best_right_r, left_scores, right_scores
+
+
+# запускаем расширение для каждого seed'а
+best_smax = -1
+best_result = None
+
+for (qi, ri, kmer) in seeds:
+    q_end = qi + k
+    r_end = ri + k
+    seed_score = k * match
+
+    print(f"\nSeed: {kmer}  query[{qi}:{q_end}]  ref[{ri}:{r_end}]  seed_score={seed_score}")
+
+    smax, blq, blr, brq, brr, left_sc, right_sc = extend(qi, ri, q_end, r_end)
+
+    print(f"  Расширение влево:")
+    if left_sc:
+        for (q, r, sc) in left_sc:
+            print(f"    query[{q}]={query[q]} vs ref[{r}]={ref[r]}  Scur={sc}")
+    else:
+        print("    некуда расширяться")
+
+    print(f"  Расширение вправо:")
+    if right_sc:
+        for (q, r, sc) in right_sc:
+            print(f"    query[{q}]={query[q]} vs ref[{r}]={ref[r]}  Scur={sc}")
+    else:
+        print("    некуда расширяться")
+
+    print(f"  Smax = {smax}")
+    print(f"  Итоговый регион: query[{blq}:{brq}]  ref[{blr}:{brr}]")
+    print(f"    query: {query[blq:brq]}")
+    print(f"    ref:   {ref[blr:brr]}")
+
+    if smax > best_smax:
+        best_smax = smax
+        best_result = (kmer, blq, blr, brq, brr)
+
+print("Лучший результат:")
+kmer, blq, blr, brq, brr = best_result
+print(f"  Лучший k-мер: {kmer}")
+print(f"  Smax = {best_smax}")
+q_aligned = query[blq:brq]
+r_aligned = ref[blr:brr]
+print(f"  Query: {q_aligned}")
+match_str = "".join("|" if a == b else "." for a, b in zip(q_aligned, r_aligned))
+print(f"         {match_str}")
+print(f"  Ref:   {r_aligned}")
