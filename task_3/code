@@ -1,0 +1,113 @@
+match = 3
+mismatch = -3
+
+seq1 = "ATGCAGCAGCAGCCA"
+seq2 = "ATATAT"
+
+n = len(seq1)
+m = len(seq2)
+
+
+def s(a, b):
+    return match if a == b else mismatch
+
+
+def print_matrix(dp, seq1, seq2):
+    print("      -    " + "    ".join(f" {c}" for c in seq2))
+    for i in range(len(seq1) + 1):
+        label = "-" if i == 0 else seq1[i - 1]
+        row = "  ".join(f"{dp[i][j]:4d}" for j in range(len(seq2) + 1))
+        print(f"{label}  {row}")
+
+# Линейный штраф
+gap = -4
+
+dp = [[0] * (m + 1) for _ in range(n + 1)]
+for i in range(n + 1):
+    dp[i][0] = i * gap
+for j in range(m + 1):
+    dp[0][j] = j * gap
+
+for i in range(1, n + 1):
+    for j in range(1, m + 1):
+        dp[i][j] = max(
+            dp[i-1][j-1] + s(seq1[i-1], seq2[j-1]),
+            dp[i-1][j] + gap,
+            dp[i][j-1] + gap
+        )
+
+print("Линейный штраф (gap = -4)")
+print_matrix(dp, seq1, seq2)
+print(f"Score = {dp[n][m]}")
+
+# трейсбэк
+i, j = n, m
+a1, a2 = [], []
+while i > 0 or j > 0:
+    if i > 0 and j > 0 and dp[i][j] == dp[i-1][j-1] + s(seq1[i-1], seq2[j-1]):
+        a1.append(seq1[i-1]); a2.append(seq2[j-1]); i -= 1; j -= 1
+    elif i > 0 and dp[i][j] == dp[i-1][j] + gap:
+        a1.append(seq1[i-1]); a2.append("-"); i -= 1
+    else:
+        a1.append("-"); a2.append(seq2[j-1]); j -= 1
+
+a1 = "".join(reversed(a1))
+a2 = "".join(reversed(a2))
+print(f"X: {a1}")
+print(f"Y: {a2}\n")
+
+# Аффинный штраф
+gap_open = -10
+gap_ext = -1
+INF = float("-inf")
+
+M  = [[INF] * (m + 1) for _ in range(n + 1)]
+Gx = [[INF] * (m + 1) for _ in range(n + 1)]
+Gy = [[INF] * (m + 1) for _ in range(n + 1)]
+
+M[0][0] = 0
+for i in range(1, n + 1):
+    Gx[i][0] = gap_open + (i - 1) * gap_ext
+for j in range(1, m + 1):
+    Gy[0][j] = gap_open + (j - 1) * gap_ext
+
+for i in range(1, n + 1):
+    for j in range(1, m + 1):
+        best_diag = max(M[i-1][j-1], Gx[i-1][j-1], Gy[i-1][j-1])
+        M[i][j]  = best_diag + s(seq1[i-1], seq2[j-1])
+        Gx[i][j] = max(M[i-1][j] + gap_open, Gx[i-1][j] + gap_ext)
+        Gy[i][j] = max(M[i][j-1] + gap_open, Gy[i][j-1] + gap_ext)
+
+# для вывода берём max из трёх матриц в каждой ячейке
+dp_aff = [[max(M[i][j], Gx[i][j], Gy[i][j]) for j in range(m+1)] for i in range(n+1)]
+for i in range(n + 1):
+    for j in range(m + 1):
+        if dp_aff[i][j] == INF:
+            dp_aff[i][j] = -99
+
+print("Аффинный штраф (open = -10, extend = -1)")
+print_matrix(dp_aff, seq1, seq2)
+print(f"Score = {max(M[n][m], Gx[n][m], Gy[n][m])}")
+
+# трейсбэк аффинного
+i, j = n, m
+a1, a2 = [], []
+state = "M" if M[n][m] >= Gx[n][m] and M[n][m] >= Gy[n][m] else ("Gx" if Gx[n][m] >= Gy[n][m] else "Gy")
+
+while i > 0 or j > 0:
+    if state == "M":
+        a1.append(seq1[i-1]); a2.append(seq2[j-1])
+        i -= 1; j -= 1
+        best = max(M[i][j], Gx[i][j], Gy[i][j])
+        state = "M" if best == M[i][j] else ("Gx" if best == Gx[i][j] else "Gy")
+    elif state == "Gx":
+        a1.append(seq1[i-1]); a2.append("-"); i -= 1
+        state = "M" if M[i][j] + gap_open == Gx[i+1][j] else "Gx"
+    else:
+        a1.append("-"); a2.append(seq2[j-1]); j -= 1
+        state = "M" if M[i][j] + gap_open == Gy[i][j+1] else "Gy"
+
+a1 = "".join(reversed(a1))
+a2 = "".join(reversed(a2))
+print(f"X: {a1}")
+print(f"Y: {a2}")
